@@ -3,10 +3,10 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 void main() {
-  runApp(MyApp());
+  runApp(DataRetrieveApp());
 }
 
-class MyApp extends StatelessWidget {
+class DataRetrieveApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
