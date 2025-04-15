@@ -65,11 +65,12 @@ class _FormValidationScreenState extends State<FormValidationScreen> {
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Please enter your email';
-                  } else if (!RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}\$').hasMatch(value)) {
+                  } else if (!RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$').hasMatch(value)) {
                     return 'Enter a valid email address';
                   }
                   return null;
                 },
+
               ),
               SizedBox(height: 10),
               TextFormField(
@@ -79,11 +80,12 @@ class _FormValidationScreenState extends State<FormValidationScreen> {
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Please enter your phone number';
-                  } else if (!RegExp(r'^[0-9]{10}\$').hasMatch(value)) {
+                  } else if (!RegExp(r'^[0-9]{10}$').hasMatch(value)) {
                     return 'Enter a valid 10-digit phone number';
                   }
                   return null;
                 },
+
               ),
               SizedBox(height: 20),
               ElevatedButton(
