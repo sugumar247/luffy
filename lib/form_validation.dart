@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(const FormValidation());
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class FormValidation extends StatelessWidget {
+  const FormValidation({super.key});
 
   @override
   Widget build(BuildContext context) {
