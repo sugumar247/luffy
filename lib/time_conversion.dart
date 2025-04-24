@@ -41,7 +41,8 @@ class _TimeZoneConverterScreenState extends State<TimeZoneConverterScreen> {
     final toZone = tz.getLocation(selectedToTimeZone);
 
     final fromTzTime = tz.TZDateTime.from(localTime, fromZone);
-    final toTzTime = fromTzTime.toLocal().add(toZone.currentTimeZone.offset - fromZone.currentTimeZone.offset);
+    final toTzTime = fromTzTime.toLocal().add(Duration(minutes: toZone.currentTimeZone.offset) - Duration(minutes: fromZone.currentTimeZone.offset));
+
     return DateFormat('hh:mm a').format(toTzTime);
   }
 
