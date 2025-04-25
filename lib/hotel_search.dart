@@ -1,109 +1,133 @@
 import 'package:flutter/material.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:google_places_flutter/google_places_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
+
+//dependencies:
+//geolocator: ^10.1.0
+
+//dependency_overrides:
+//geolocator_android: ^4.1.7
+
 
 void main() {
-  runApp(HotelSearchApp());
+  runApp(const MaterialApp(
+    home: NearbyHotelsPage(),
+    debugShowCheckedModeBanner: false,
+  ));
 }
 
-class HotelSearchApp extends StatelessWidget {
+class NearbyHotelsPage extends StatefulWidget {
+  const NearbyHotelsPage({super.key});
+
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: HotelSearchScreen(),
-    );
-  }
+  State<NearbyHotelsPage> createState() => _NearbyHotelsPageState();
 }
 
-class HotelSearchScreen extends StatefulWidget {
-  @override
-  _HotelSearchScreenState createState() => _HotelSearchScreenState();
-}
+class _NearbyHotelsPageState extends State<NearbyHotelsPage> {
+  String? locationMessage;
+  bool isLoading = false;
 
-class _HotelSearchScreenState extends State<HotelSearchScreen> {
-  late GoogleMapController mapController;
-  Position? _currentPosition;
-  final Set<Marker> _markers = {};
-  TextEditingController searchController = TextEditingController();
-
-  @override
-  void initState() {
-    super.initState();
-    _getCurrentLocation();
-  }
-
-  Future<void> _getCurrentLocation() async {
-    Position position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+  Future<void> _getCurrentLocationAndShowHotels() async {
     setState(() {
-      _currentPosition = position;
+      isLoading = true;
+      locationMessage = null;
     });
-    _updateMapLocation();
-  }
 
-  void _updateMapLocation() {
-    if (_currentPosition != null) {
-      mapController.animateCamera(
-        CameraUpdate.newLatLng(
-          LatLng(_currentPosition!.latitude, _currentPosition!.longitude),
-        ),
-      );
+    try {
+      // Check if location services are enabled
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        setState(() {
+          locationMessage = 'Location services are disabled.';
+          isLoading = false;
+        });
+        return;
+      }
+
+      // Check location permission
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) {
+          setState(() {
+            locationMessage = 'Location permissions are denied';
+            isLoading = false;
+          });
+          return;
+        }
+      }
+
+      if (permission == LocationPermission.deniedForever) {
+        setState(() {
+          locationMessage = 'Location permissions are permanently denied.';
+          isLoading = false;
+        });
+        return;
+      }
+
+      // Get current location
+      Position position = await Geolocator.getCurrentPosition(
+          desiredAccuracy: LocationAccuracy.high);
+      double lat = position.latitude;
+      double lon = position.longitude;
+
+      setState(() {
+        locationMessage = 'Your location: ($lat, $lon)';
+      });
+
+      // Google Maps search URL
+      final Uri url = Uri.parse('https://www.google.com/maps/search/hotels/@$lat,$lon,15z');
+
+      if (await canLaunchUrl(url)) {
+        await launchUrl(url, mode: LaunchMode.externalApplication);
+      } else {
+        setState(() {
+          locationMessage = 'Could not launch Google Maps.';
+        });
+      }
+    } catch (e) {
+      setState(() {
+        locationMessage = 'Error: ${e.toString()}';
+      });
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
     }
-  }
-
-  void _searchHotels(String query) {
-    // Mock implementation for hotel search
-    setState(() {
-      _markers.clear();
-      _markers.add(
-        Marker(
-          markerId: MarkerId('hotel1'),
-          position: LatLng(_currentPosition!.latitude + 0.01, _currentPosition!.longitude + 0.01),
-          infoWindow: InfoWindow(title: 'Hotel Paradise', snippet: '4.5 stars'),
-        ),
-      );
-      _markers.add(
-        Marker(
-          markerId: MarkerId('hotel2'),
-          position: LatLng(_currentPosition!.latitude - 0.01, _currentPosition!.longitude - 0.01),
-          infoWindow: InfoWindow(title: 'Luxury Inn', snippet: '4.7 stars'),
-        ),
-      );
-    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Hotel Finder')),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: TextField(
-              controller: searchController,
-              decoration: InputDecoration(
-                hintText: 'Enter location',
-                suffixIcon: IconButton(
-                  icon: Icon(Icons.search),
-                  onPressed: () => _searchHotels(searchController.text),
-                ),
+      appBar: AppBar(title: const Text("Nearby Hotels")),
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              ElevatedButton(
+                onPressed: isLoading ? null : _getCurrentLocationAndShowHotels,
+                child: isLoading
+                    ? const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                  ),
+                )
+                    : const Text("Find Nearby Hotels"),
               ),
-            ),
-          ),
-          Expanded(
-            child: GoogleMap(
-              onMapCreated: (controller) => mapController = controller,
-              initialCameraPosition: CameraPosition(
-                target: LatLng(37.7749, -122.4194),
-                zoom: 12,
+              const SizedBox(height: 20),
+              Text(
+                locationMessage ?? '',
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 16),
               ),
-              markers: _markers,
-              myLocationEnabled: true,
-            ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
