@@ -1,6 +1,3 @@
-# Real Time Weather Report Fetching System
-# Replace the  YOUR_API_KEY in the statement String apiKey = "YOUR_API_KEY";  with  a valid API key from OpenWeatherMap
-
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -36,7 +33,7 @@ class _WeatherScreenState extends State<WeatherScreen> {
   String location = "New York";
   double? temperature;
   String description = "Fetching weather...";
-  String apiKey = "YOUR_API_KEY";
+  String apiKey = "bf36644c7af8fdf8799bafae5922f7da";
 
   Future<void> fetchWeather() async {
     final response = await http.get(
